@@ -5,7 +5,7 @@
 import random
 import log
 import uuid
-import cmath
+import math
 
 
 class Neuron(object):
@@ -46,16 +46,12 @@ class Neuron(object):
         log.logger.debug('Inputs: ' + str(self.inputs))
         a_val = self.get_activation()
         a_val -= self.threshold
-#        if a_val > 0:
-#            self.output = 1
-#        else:
-#            self.output = 0
         self.output = self.sigmoid(a_val, 1)
         log.logger.debug('Output: ' + str(self.output))
 
     def sigmoid(self, activation, response):
-        '''Sigmoid function to smooth ou the output.'''
-        return(1 / (1 + cmath.exp(-activation / response)))
+        '''Sigmoid function to smooth out the output.'''
+        return(1 / (1 + math.exp(-activation / response)))
     
-    def adjust(self, ratio):
+#    def adjust(self, ratio):
         

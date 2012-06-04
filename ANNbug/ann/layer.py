@@ -11,7 +11,7 @@ class Layer(object):
     '''
     A layer in the neural net.
     '''
-    def __init__(self, n_neurons, con):
+    def __init__(self, n_neurons):
         '''
         Constructor.
 
@@ -27,12 +27,14 @@ class Layer(object):
         for i in range(n_neurons):
             self.neurons.append(neuron.Neuron())
             self.neurons[i].inputs = [0 for _j in range(n_neurons)]
-        self.output = con
-
-    def update(self, value):
+        self.inputs = list()
+        self.outputs = list()
+        
+    def update(self):
         '''Update the output.'''
         log.logger.debug('Updating layer: ' + self.id)
+        self.outputs = list()
         for n in self.neurons:
-            n.inputs = value
+            n.inputs = self.inputs
             n.update()
-        self.output.send([outp.output for outp in self.neurons])
+            self.outputs.append(n.output)
