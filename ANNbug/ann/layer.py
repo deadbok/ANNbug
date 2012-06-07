@@ -20,7 +20,7 @@ class Layer(object):
         @param n_inputs: Number of inputs per neuron.
         @type n_inputs: int
         '''
-        log.logger.debug('Creating a neural net')
+        log.logger.debug('Creating a neural layer')
         self.id = str(uuid.uuid4())
         log.logger.debug('ID: ' + self.id)
         self.neurons = list()

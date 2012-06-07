@@ -25,15 +25,21 @@ class Neuron(object):
         #Connections
         self.output = 0
         self.inputs = list()
+        
+    def generate_weights(self):
+        '''
+        Generate the weights for the neuron.
+        '''
+        self.weights = list()
+        for i in range(len(self.inputs)):
+            self.weights.append(random.uniform(-1, 1))    
 
     def get_activation(self):
         '''Get the activation value.'''
         log.logger.debug('Calculating activation value for: ' + self.id)
+        log.logger.debug('Creating ' + str(len(self.inputs)) + ' weights')
         if self.weights == None:
-            log.logger.debug('Creating ' + str(len(self.inputs)) + ' weights')
-            self.weights = list()
-            for i in range(len(self.inputs)):
-                self.weights.append(random.uniform(-1, 1))
+            self.generate_weights()
         ret = 0
         for i in range(len(self.inputs)):
             ret += self.inputs[i] * self.weights[i]
@@ -52,6 +58,5 @@ class Neuron(object):
     def sigmoid(self, activation, response):
         '''Sigmoid function to smooth out the output.'''
         return(1 / (1 + math.exp(-activation / response)))
-    
-#    def adjust(self, ratio):
+
         

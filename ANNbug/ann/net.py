@@ -53,3 +53,13 @@ class Net(object):
             
         self.output = last_output
         log.logger.debug('Output: ' + str(self.output))
+
+    def neuron_count(self):
+        '''
+        Get the number of neurons in the network.
+        '''
+        #Count neurons in each layer
+        ret = 0
+        for n_layer in self.layers:
+            ret += len(n_layer.neurons)
+        return(ret)

@@ -2,9 +2,10 @@
 @since: 21 Jan 2012
 @author: oblivion
 '''
-from ann import net
+from ann import genetic
 import logging
 import log
+import random
 
 #Jan 21, 2012 version 0.1
 #    Getting the basics straight.
@@ -18,11 +19,14 @@ def main():
 
     log.logger.info("ANNbug V" + str(VERSION))
 
-    brain = net.Net(2, 1, 1, 3)
-    brain.update([2, 2])
+    brains = list()   
+    log.logger.info("Creating initial brains...") 
+    for i in range(20):
+        log.logger.debug("Creating initial brain number: " + str(i))
+        brains.append(genetic.Genetic(2, 1, 1, 3))
 
-    print(str(brain))
-    print(str(brain.output))
+    for brain in brains:
+        print(str(brain))
 
 if __name__ == '__main__':
     main()
