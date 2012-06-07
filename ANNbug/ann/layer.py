@@ -11,7 +11,7 @@ class Layer(object):
     '''
     A layer in the neural net.
     '''
-    def __init__(self, n_neurons):
+    def __init__(self, n_neurons, n_inputs):
         '''
         Constructor.
 
@@ -25,7 +25,7 @@ class Layer(object):
         log.logger.debug('ID: ' + self.id)
         self.neurons = list()
         for i in range(n_neurons):
-            self.neurons.append(neuron.Neuron())
+            self.neurons.append(neuron.Neuron(n_inputs))
             self.neurons[i].inputs = [0 for _j in range(n_neurons)]
         self.inputs = list()
         self.outputs = list()

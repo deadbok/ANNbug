@@ -10,11 +10,12 @@ import math
 
 class Neuron(object):
     '''Basic neuron.'''
-    def __init__(self):
+    def __init__(self, n_inputs):
         '''
         Construct a neuron.
 
         @param n_inputs: Number of inputs.
+        @type n_inputs: int. 
         '''
         log.logger.debug('Creating a neuron')
         self.id = str(uuid.uuid4())
@@ -24,22 +25,24 @@ class Neuron(object):
         log.logger.debug('Treshold: ' + str(self.threshold))
         #Connections
         self.output = 0
+        log.logger.debug('Creating ' + str(n_inputs) + ' inputs')
         self.inputs = list()
+        for _i in range(n_inputs):
+            self.inputs.append(0)
+        self.generate_weights()
         
     def generate_weights(self):
         '''
         Generate the weights for the neuron.
         '''
+        log.logger.debug('Creating weights')
         self.weights = list()
-        for i in range(len(self.inputs)):
+        for _i in range(len(self.inputs)):
             self.weights.append(random.uniform(-1, 1))    
 
     def get_activation(self):
         '''Get the activation value.'''
         log.logger.debug('Calculating activation value for: ' + self.id)
-        log.logger.debug('Creating ' + str(len(self.inputs)) + ' weights')
-        if self.weights == None:
-            self.generate_weights()
         ret = 0
         for i in range(len(self.inputs)):
             ret += self.inputs[i] * self.weights[i]
