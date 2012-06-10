@@ -42,6 +42,12 @@ class Net(object):
         self.output = None
 
     def update(self, value):
+        '''
+        Update the output, with new values from the input.
+        
+        @param value: The new input value.
+        @type value: list
+        '''
         log.logger.debug('Updating net: ' + self.id)
         self.inputs = value
         #Set inputs in the input layer
@@ -64,4 +70,29 @@ class Net(object):
         ret = 0
         for n_layer in self.layers:
             ret += len(n_layer.neurons)
+        return(ret)
+    
+    def set_weights(self, weights):
+        '''
+        Set all the weights in the network from an array.
+        
+        @param weights: An array of new weights.
+        @type weights: list
+        '''
+        i = 0
+        for n_layer in self.layers:
+            for n_neuron in n_layer.neurons:
+                for _j in range(len(n_neuron.weights)):
+                    n_neuron.weights[_j] = weights[i]
+                    i += 1
+                    
+    def get_weights(self):
+        '''
+        Return an array of all the weights in the network.
+        '''
+        ret = list()
+        for n_layer in self.layers:
+            for n_neuron in n_layer.neurons:
+                for weight in n_neuron.weights:
+                    ret.append(weight)
         return(ret)
