@@ -64,7 +64,7 @@ def mutate(chromosome, mutation_rate):
             chromosome[_i] += random.uniform(-1, 1)
     return(chromosome)
 
-def child(pair, crossover_rate):
+def child(pair, crossover_rate, mut_rate):
     '''
     Have a child.
     '''
@@ -77,10 +77,10 @@ def child(pair, crossover_rate):
         log.logger.debug('A child is born: ' + str(childchromo))
         ret.change(childchromo)
 
-    ret.change(mutate(ret.chromosome, 0.01)) 
+    ret.change(mutate(ret.chromosome, mut_rate)) 
     return(ret)
 
-def train(brains, training_set):
+def train(brains, training_set, cross_rate, mut_rate):
     '''
     Train a list of genetic networks.
     
@@ -89,35 +89,34 @@ def train(brains, training_set):
     @param training_set: A list of training inputs, and outputs
     @type training_set: list
     '''
-    best_fit = -999999999
-    generation = 0
-    n_training = 0
-    #List to keep track of the fitness of each training set 
-    ts_fitness = list()
-    while best_fit < 0.05:
-        best_fit = -999999999
-        if generation % 100 == 0:
-            log.logger.debug('New training set: ' + str(training_set[n_training]))
-            ts = training_set[n_training]
+    global_fit = -999999999
+    while global_fit < 0.05:
+        #Run through the training set
+        for ts in training_set:
+            log.logger.info('New training set: ' + str(ts))
             inputs = ts[0]
             result = ts[1]
-        output = 0
-        for brain in brains:
-            brain.update(inputs)
-            fitness = brain.fitness(result)
-            if best_fit < fitness:
-                best_fit = fitness
-                output = brain.net.output
-        log.logger.info("Best fit generation " + str(generation)
-                        + ": " + str(best_fit) + " output " + str(output))
-        nextgen = list()
-        while len(nextgen) < len(brains):
-            pair = select_brains(brains, result)
-            log.logger.debug("Pairing brains with " + str(pair[0].fitness(result))
-                            + " and " + str(pair[1].fitness(result)) + " in fitness score") 
-            nextgen.append(child(pair, 0.75))
-        brains = nextgen
-        generation += 1
+
+            best_fit = -999999999
+            generation = 0
+            while best_fit < 0.01:
+                output = 0
+                for brain in brains:
+                    brain.update(inputs)
+                    fitness = brain.fitness(result)
+                    if best_fit < fitness:
+                        best_fit = fitness
+                    output = brain.net.output
+                log.logger.info("Best fit generation " + str(generation)
+                                + ": " + str(best_fit) + " output " + str(output))
+                nextgen = list()
+                while len(nextgen) < len(brains):
+                    pair = select_brains(brains, result)
+                    log.logger.debug("Pairing brains with " + str(pair[0].fitness(result))
+                                    + " and " + str(pair[1].fitness(result)) + " in fitness score") 
+                    nextgen.append(child(pair, cross_rate, mut_rate))
+                brains = nextgen
+                generation += 1
          
 
 def main():
@@ -139,7 +138,7 @@ def main():
     training_set.append([[0, 1], [1]])
     training_set.append([[1, 1], [0]])
                 
-    train(brains, training_set)
+    train(brains, training_set, 0.90, 0.25)
 
 
 if __name__ == '__main__':
