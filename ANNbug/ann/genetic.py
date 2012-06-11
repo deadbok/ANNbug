@@ -17,16 +17,16 @@ class Genetic(object):
         Constructor
         '''
         self.chromosome = list()
-        self.net = net.Net(n_inputs, n_outputs, n_hidden_layers, n_neurons) 
+        self.net = net.Net(n_inputs, n_outputs, n_hidden_layers, n_neurons)
         #Chromosome
         self.chromosome = self.net.get_weights()
-                            
+
     def __str__(self):
         '''
         Return the chromosome as a string.
         '''
         return(str(self.chromosome))
-        
+
     def fitness(self, answer):
         '''
         Return the fitness of the chromosome, by comparing the
@@ -40,13 +40,18 @@ class Genetic(object):
             return(1)
         ret = 0
         for _i, o_val in enumerate(self.net.output):
-            ret += 1/(answer[_i] - o_val)
+            if answer[_i] == o_val:
+                ret += 10000000000
+            elif answer[_i] == 0:
+                ret += 1 / (o_val)
+            else:
+                ret += 1 / (answer[_i] - o_val)
         ret = ret / len(answer)
         return(ret)
 
     def update(self, value):
         self.net.update(value)
-        
+
     def change(self, chromosome):
         '''
         Change the chromosome of the net.
