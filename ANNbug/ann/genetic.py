@@ -36,16 +36,18 @@ class Genetic(object):
         @type answer: object
         '''
         #Both output and answer are equal, max fitness!
+        fitness = 0
         if answer == self.net.output:
-            return(1)
+            return(1000)
         ret = 0
         for _i, o_val in enumerate(self.net.output):
             if answer[_i] == o_val:
-                ret += 10000000000
+                ret += 1000
             elif answer[_i] == 0:
-                ret += 1 / (o_val)
+                fitness = 1 / abs(o_val)
             else:
-                ret += 1 / (answer[_i] - o_val)
+                fitness = 1 / abs(answer[_i] - o_val)
+            ret += fitness
         ret = ret / len(answer)
         return(ret)
 
