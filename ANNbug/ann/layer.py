@@ -38,3 +38,26 @@ class Layer(object):
             n.inputs = self.inputs
             n.update()
             self.outputs.append(n.output)
+            
+class InputLayer(Layer):
+    '''
+    A layer in the neural net.
+    '''
+    def __init__(self, n_inputs):
+        '''
+        Constructor.
+
+        @param n_inputs: Number of inputs per neuron.
+        @type n_inputs: int
+        '''
+        log.logger.debug('Creating a neural input layer')
+        Layer.__init__(self, n_inputs, n_inputs)
+                        
+    def update(self):
+        '''Update the output.'''
+        log.logger.debug('Updating layer: ' + self.id)
+        self.outputs = list()
+        for _i, n in enumerate(self.neurons):
+            n.inputs = [self.inputs[_i]]
+            n.update()
+            self.outputs.append(n.output)

@@ -29,7 +29,7 @@ class Net(object):
         log.logger.debug('ID: ' + self.id)
         self.layers = list()
         #Input layer
-        self.layers.append(layer.Layer(n_inputs, n_inputs))
+        self.layers.append(layer.InputLayer(n_inputs))
         #Create first hidden layer
         self.layers.append(layer.Layer(n_neurons, n_inputs))
         #Create following hidden layer(s)

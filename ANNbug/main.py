@@ -20,28 +20,38 @@ def select_brains(brains, result):
     @type brains: list 
     '''
     log.logger.debug('Selecting brains.')
-    min_fitness = 999999999999
+    min_fitness = 1001
+    max_fitness = -1001
     for brain in brains:
         fitness = brain.fitness(result)
         if fitness < min_fitness:
             min_fitness = fitness
-    log.logger.debug("Worst fitness of all brains: " + str(min_fitness))
-
-    total_fitness = 0
-    for brain in brains:
-        total_fitness += brain.fitness(result)
-    log.logger.debug("Total fitness of all brains: " + str(total_fitness))
+        if fitness > max_fitness:
+            max_fitness = fitness
+    log.logger.debug("Lowest fitness of all brains: " + str(min_fitness))
+    log.logger.debug("Highest fitness of all brains: " + str(max_fitness))
 
     def roll():
         '''
         Select a brain.
         '''
-        target_fitness = random.uniform(0, total_fitness)
+        target_fitness = random.uniform(min_fitness, max_fitness)
         _i = -1
         fitness = 0
-        while fitness < target_fitness:
-            _i += 1
-            fitness += brains[_i].fitness(result)
+        if target_fitness < 0:
+            total_fitness= min_fitness
+            while total_fitness < target_fitness:
+                _i += 1
+                fitness = brains[_i].fitness(result)
+                if fitness < 0:
+                    total_fitness -= fitness
+        elif target_fitness > 0:
+            total_fitness= max_fitness
+            while total_fitness > target_fitness:
+                _i += 1
+                fitness = brains[_i].fitness(result)
+                if fitness > 0:
+                    total_fitness -= fitness
         return(brains[_i])
 
     ret = list()
@@ -65,7 +75,7 @@ def child(pair, crossover_rate, mut_rate):
     Have a child.
     '''
     ret = copy.deepcopy(pair[0])
-    if crossover_rate < random.uniform(0, 1):
+    if crossover_rate > random.uniform(0, 1):
         split = random.randint(1, len(pair[0].chromosome) - 1)
         childchromo = list()
         childchromo.extend(pair[0].chromosome[0:split])
@@ -86,23 +96,31 @@ def train(brains, training_set, cross_rate, mut_rate):
     @type training_set: list
     '''
     generation = 0
-    best_fit = 0
-    while best_fit < 1000:
-        best_fit = 0
+    best_fit = 1001
+    while best_fit != 0:
+        best_fit = 1001
+        best_output = None    
         for brain in brains:
             fitness = 0
+            abs_fitness = 0
             output = list()
             #Run through the training set
             for ts in training_set:
                 log.logger.debug('New training set: ' + str(ts))
+                #This is vector math. Should code this as a distance.
                 inputs = ts[0]
                 result = ts[1]
                 brain.update(inputs)
                 fitness += brain.fitness(result)
+                abs_fitness += abs(brain.fitness(result))
                 output.append(brain.net.output)
-            fitness = fitness / len(ts)
-            if best_fit < fitness:
-                best_fit = fitness
+            fitness = fitness / len(training_set)
+            abs_fitness = abs_fitness / len(training_set)
+            log.logger.debug('Fitness ' + str(fitness) + '. Absolute fitness ' 
+                             + str(abs_fitness))
+            #if fitness is closer to zero       
+            if abs(best_fit) > abs(abs_fitness):
+                best_fit = abs_fitness
                 best_output = output
         log.logger.info("Best fit generation " + str(generation)
                         + ": " + str(best_fit) + " output " + str(best_output))
@@ -135,7 +153,7 @@ def main():
     training_set.append([[0, 1], [1]])
     training_set.append([[1, 1], [0]])
 
-    train(brains, training_set, 0.90, 0.05)
+    train(brains, training_set, 0.75, 0.005)
 
 
 if __name__ == '__main__':
