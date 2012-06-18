@@ -1,0 +1,12 @@
+2012-06-19  oblivion  <oblivion@ace>
+
+	* .gitignore: New file.
+	* genetic/algorithm.py: New file.
+	* genetic/chromosome.py: Extended with general methods. 
+	* gentest.py: Simplified as general code has been moved to the 'genetic' package.
+	
+
+2012-06-18  oblivion  <oblivion@ace>
+
+	* .gitignore: New file.
+	* genetic/algorithm.py: New file.

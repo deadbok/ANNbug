@@ -56,7 +56,7 @@ class Neuron(object):
         a_val = self.get_activation()
         a_val -= self.threshold
         self.output = self.sigmoid(a_val, 1)
-        #self.output = a_val
+#        self.output = a_val
         log.logger.debug('Output: ' + str(self.output))
 
     def sigmoid(self, activation, response):
