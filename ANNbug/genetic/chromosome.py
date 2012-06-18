@@ -4,6 +4,7 @@ Chromosome.
 @since: Jun 16, 2012
 @author: oblivion
 '''
+
 from copy import deepcopy
 import random
 

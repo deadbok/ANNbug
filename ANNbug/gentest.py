@@ -180,5 +180,6 @@ def main():
     for answer in population.answers:
         print('    ' + answer.decode() + ' = ' + str(target))
 
+
 if __name__ == '__main__':
     main()
