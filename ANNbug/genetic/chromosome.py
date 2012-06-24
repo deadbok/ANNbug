@@ -16,28 +16,48 @@ class Chromosome(object):
         '''
         Constructor
         '''
-        self.bits = '0'
+        self.data = '0'
 
-    def randomise(self, length):
+    def randomise_bits(self, length):
         '''
-        Randomise the chromosome.
+        Randomise the chromosome with binary data.
         
-        @param length: The number of bits in the chromosome.
+        @param length: The number of data in the chromosome.
         @type length: int
         '''
         def random_bits():
             _i = length - 1
-            self.bits = ''
+            self.data = ''
             while _i > 0:
-                self.bits += str(random.randint(0, 1))
+                self.data += str(random.randint(0, 1))
                 _i -= 1
 
-        if self.validate == None:
-            random_bits()
-        else:
-            random_bits()
+        #Validate the chromosome, if a validation function is present
+        random_bits()
+        if not self.validate == None:
             while not self.validate():
                 random_bits()
+        return(self)
+
+    def randomise_floats(self, length):
+        '''
+        Randomise the chromosome with floating-point data.
+        
+        @param length: The number of data in the chromosome.
+        @type length: int
+        '''
+        def random_floats():
+            _i = length - 1
+            self.data = ''
+            while _i > 0:
+                self.data += str(random.uniform(-1, 1))
+                _i -= 1
+
+        #Validate the chromosome, if a validation function is present
+        random_floats()
+        if self.validate == None:
+            while not self.validate():
+                random_floats()
         return(self)
 
     def validate(self):
@@ -49,8 +69,10 @@ class Chromosome(object):
     def decode(self):
         '''
         Override this method with code to decode the chromosome.
+        
+        @return: Return a decoded chromosome, of the object type it represents or None
         '''
-        return('')
+        return(None)
 
     def fitness(self, target):
         '''
@@ -71,11 +93,11 @@ class Chromosome(object):
         #Only cross according to crossover rate
         if rate < random.uniform(0, 1):
             #Get a random point from where to inherit genes from other
-            cross_index = random.randint(0, len(self.bits))
+            cross_index = random.randint(0, len(self.data))
             #Create a child as a copy of self
             child = deepcopy(self)
             #Cross the chromosomes
-            child.bits = self.bits[0:cross_index] + other.bits[cross_index:]
+            child.data = self.data[0:cross_index] + other.data[cross_index:]
             return(child)
         #Return self, if we are not to cross this chromosome
         return(self)
@@ -88,13 +110,13 @@ class Chromosome(object):
         @type rate: float            
         '''
         new_bits = ''
-        for _i in range(0, len(self.bits)):
+        for _i in range(0, len(self.data)):
             if rate > random.uniform(0, 1):
-                if self.bits[_i] == '0':
+                if self.data[_i] == '0':
                     new_bits += '1'
                 else:
                     new_bits += '0'
             else:
-                new_bits += self.bits[_i]
-        self.bits = new_bits
+                new_bits += self.data[_i]
+        self.data = new_bits
         return(self)

@@ -2,7 +2,8 @@
 @since: 21 Jan 2012
 @author: oblivion
 '''
-from ann import genetic
+from genetic import chromosome
+from ann import net
 import logging
 import log
 import random
@@ -11,6 +12,56 @@ import copy
 #Jan 21, 2012 version 0.1
 #    Getting the basics straight.
 VERSION = 0.1
+
+class AnnChromosome(chromosome.Chromosome):
+    '''
+    Chromosome for an ann.
+    '''
+    def __init__(self, n_inputs, n_outputs, n_hidden_layers, n_neurons):
+        '''
+        Constructor.
+        '''
+        chromosome.Chromosome.__init__(self)
+        self.n_inputs = n_inputs
+        self.n_outputs = n_outputs
+        self.n_hiddeb_layers = n_hidden_layers
+        self.n_neurons = n_neurons
+        self.net = None
+
+    def decode(self):
+        '''
+        Decode the chromosome to an ann.
+        '''
+        if self.data == None:
+            return(None)
+
+        self.net = net.Net(self.n_inputs, self.n_outputs, self.n_hiddem_layers, self.n_neurons)
+        self.net.set_weights(self.data)
+
+
+    def validate(self):
+        '''
+        Check if the chromosome is meaningful.
+        '''
+        if self.data == None:
+            return(False)
+        else:
+            return(True)
+
+    def fitness(self, target):
+        '''
+        Get the fitness of the chromosome.
+        '''
+        #Both output and answer are equal, max fitness!
+        if target == self.net.output:
+            return(0)
+        ret = 0
+        for _i, o_val in enumerate(self.net.output):
+            ret += target[_i] - o_val
+        ret = ret / len(target)
+        log.logger.debug("Fitness: " + str(ret))
+        return(ret)
+
 
 def select_brains(brains, result):
     '''
@@ -39,14 +90,14 @@ def select_brains(brains, result):
         _i = -1
         fitness = 0
         if target_fitness < 0:
-            total_fitness= min_fitness
+            total_fitness = min_fitness
             while total_fitness < target_fitness:
                 _i += 1
                 fitness = brains[_i].fitness(result)
                 if fitness < 0:
                     total_fitness -= fitness
         elif target_fitness > 0:
-            total_fitness= max_fitness
+            total_fitness = max_fitness
             while total_fitness > target_fitness:
                 _i += 1
                 fitness = brains[_i].fitness(result)
@@ -99,7 +150,7 @@ def train(brains, training_set, cross_rate, mut_rate):
     best_fit = 1001
     while best_fit != 0:
         best_fit = 1001
-        best_output = None    
+        best_output = None
         for brain in brains:
             fitness = 0
             abs_fitness = 0
@@ -116,7 +167,7 @@ def train(brains, training_set, cross_rate, mut_rate):
                 output.append(brain.net.output)
             fitness = fitness / len(training_set)
             abs_fitness = abs_fitness / len(training_set)
-            log.logger.debug('Fitness ' + str(fitness) + '. Absolute fitness ' 
+            log.logger.debug('Fitness ' + str(fitness) + '. Absolute fitness '
                              + str(abs_fitness))
             #if fitness is closer to zero       
             if abs(best_fit) > abs(abs_fitness):

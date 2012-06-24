@@ -45,8 +45,8 @@ class EquChromosome(chromosome.Chromosome):
         gene_start = 0
         gene_end = 0
         operator = False
-        for gene_end in range(4, len(self.bits), 4):
-            gene = str(self.bits[gene_start:gene_end])
+        for gene_end in range(4, len(self.data), 4):
+            gene = str(self.data[gene_start:gene_end])
             try:
                 #Add the value of the gene
                 gene_value = GENES[gene]

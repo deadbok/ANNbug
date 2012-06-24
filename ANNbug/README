@@ -1,1 +1,4 @@
 My private artificial neural network experiment.
+
+main.py: The main project code.
+gentest.py: Example to test the genetic algorithm code.
