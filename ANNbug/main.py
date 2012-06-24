@@ -3,6 +3,7 @@
 @author: oblivion
 '''
 from genetic import chromosome
+from genetic import algorithm
 from ann import net
 import logging
 import log
@@ -12,6 +13,9 @@ import copy
 #Jan 21, 2012 version 0.1
 #    Getting the basics straight.
 VERSION = 0.1
+
+#Store the generations of anns
+GENERATIONS = list()
 
 class AnnChromosome(chromosome.Chromosome):
     '''
@@ -24,7 +28,7 @@ class AnnChromosome(chromosome.Chromosome):
         chromosome.Chromosome.__init__(self)
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
-        self.n_hiddeb_layers = n_hidden_layers
+        self.n_hidden_layers = n_hidden_layers
         self.n_neurons = n_neurons
         self.net = None
 
@@ -35,7 +39,7 @@ class AnnChromosome(chromosome.Chromosome):
         if self.data == None:
             return(None)
 
-        self.net = net.Net(self.n_inputs, self.n_outputs, self.n_hiddem_layers, self.n_neurons)
+        self.net = net.Net(self.n_inputs, self.n_outputs, self.n_hidden_layers, self.n_neurons)
         self.net.set_weights(self.data)
 
 
@@ -61,6 +65,61 @@ class AnnChromosome(chromosome.Chromosome):
         ret = ret / len(target)
         log.logger.debug("Fitness: " + str(ret))
         return(ret)
+
+class AnnPopulation(algorithm.Algorithm):
+    '''
+    Population of ANNs.
+    '''
+    def __init__(self, n_inputs, n_outputs, n_hidden_layers, n_neurons):
+        '''
+        Constructor.
+        '''
+        algorithm.Algorithm.__init__(self)
+        self.n_inputs = n_inputs
+        self.n_outputs = n_outputs
+        self.n_hidden_layers = n_hidden_layers
+        self.n_neurons = n_neurons
+        self.n_genes = self.n_inputs + (self.n_hidden_layers * self.n_neurons) + self.n_outputs
+        _i = self.population_size
+        while _i > 0:
+            self.population.append(AnnChromosome(self.n_inputs,
+                                                 self.n_outputs,
+                                                 self.n_hidden_layers,
+                                                 self.n_neurons).randomise_floats(self.n_genes))
+            _i -= 1
+        #Original mutation rate
+        self.original_mrate = 0
+        #Factor to spike mutation
+        self.mfactor = 1
+
+    def evolve(self, target):
+        #Save generation
+        GENERATIONS.append(copy.deepcopy(self))
+        #Save original mutation rate
+        self.original_mrate = self.mutation_rate
+        #Spike the mutation when answers the same
+        self.mutation_rate *= self.mfactor
+        algorithm.Algorithm.evolve(self, target)
+        #If we have a useful number of generations
+        if len(GENERATIONS) > 1:
+            #Keep a count of generations in the following loop
+            _i = 0
+            #Look for answer that are the same as this one
+            for gen in reversed(GENERATIONS):
+                if not gen.best_fit == None:
+                    if gen.best_fit.decode() == self.best_fit.decode():
+                        #Ramp up the multiplication factor
+                        self.mfactor *= 32
+                    else:
+                        #As soon as we have a different answer, stop
+                        #If the last best fit is different from the current
+                        if _i == 0:
+                            #Reset the multiplier
+                            self.mfactor = 1
+                        break
+                _i += 1
+        #Reset mutation rate
+        self.mutation_rate = self.original_mrate
 
 
 def select_brains(brains, result):
