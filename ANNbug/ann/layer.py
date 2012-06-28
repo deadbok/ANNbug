@@ -29,7 +29,7 @@ class Layer(object):
             self.neurons[i].inputs = [0 for _j in range(n_neurons)]
         self.inputs = list()
         self.outputs = list()
-        
+
     def update(self):
         '''Update the output.'''
         log.logger.debug('Updating layer: ' + self.id)
@@ -38,8 +38,8 @@ class Layer(object):
             n.inputs = self.inputs
             n.update()
             self.outputs.append(n.output)
-            
-class InputLayer(Layer):
+
+class InputLayer(object):
     '''
     A layer in the neural net.
     '''
@@ -51,8 +51,15 @@ class InputLayer(Layer):
         @type n_inputs: int
         '''
         log.logger.debug('Creating a neural input layer')
-        Layer.__init__(self, n_inputs, n_inputs)
-                        
+        self.id = str(uuid.uuid4())
+        log.logger.debug('ID: ' + self.id)
+        self.neurons = list()
+        for i in range(n_inputs):
+            self.neurons.append(neuron.Neuron(1))
+            self.neurons[i].inputs = [0]
+        self.inputs = list()
+        self.outputs = list()
+
     def update(self):
         '''Update the output.'''
         log.logger.debug('Updating layer: ' + self.id)

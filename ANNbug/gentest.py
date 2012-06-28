@@ -4,7 +4,7 @@ Genetic algorithm test.
 @since: Jun 16, 2012
 @author: oblivion
 '''
-from genetic import chromosome
+from genetic import binchromo
 from genetic import algorithm
 import copy
 
@@ -26,7 +26,7 @@ GENES = {'0000': '0',
 
 GENERATIONS = list()
 
-class EquChromosome(chromosome.Chromosome):
+class EquChromosome(binchromo.BinChromo):
     '''
     Chromosome for an equation.
     '''
@@ -34,7 +34,7 @@ class EquChromosome(chromosome.Chromosome):
         '''
         Constructor.
         '''
-        chromosome.Chromosome.__init__(self)
+        binchromo.BinChromo.__init__(self)
 
     def decode(self):
         '''

@@ -2,7 +2,7 @@
 @since: 21 Jan 2012
 @author: oblivion
 '''
-from genetic import chromosome
+from genetic import floatchromo
 from genetic import algorithm
 from ann import net
 import logging
@@ -17,7 +17,7 @@ VERSION = 0.1
 #Store the generations of anns
 GENERATIONS = list()
 
-class AnnChromosome(chromosome.Chromosome):
+class AnnChromosome(floatchromo.FloatChromo):
     '''
     Chromosome for an ann.
     '''
@@ -25,7 +25,7 @@ class AnnChromosome(chromosome.Chromosome):
         '''
         Constructor.
         '''
-        chromosome.Chromosome.__init__(self)
+        floatchromo.FloatChromo.__init__(self)
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
         self.n_hidden_layers = n_hidden_layers
@@ -41,7 +41,7 @@ class AnnChromosome(chromosome.Chromosome):
 
         self.net = net.Net(self.n_inputs, self.n_outputs, self.n_hidden_layers, self.n_neurons)
         self.net.set_weights(self.data)
-
+        return(self.net)
 
     def validate(self):
         '''
@@ -52,10 +52,12 @@ class AnnChromosome(chromosome.Chromosome):
         else:
             return(True)
 
-    def fitness(self, target):
+    def fitness(self, inputs, target):
         '''
         Get the fitness of the chromosome.
         '''
+        self.decode()
+        self.net.update(inputs)
         #Both output and answer are equal, max fitness!
         if target == self.net.output:
             return(0)
@@ -74,111 +76,121 @@ class AnnPopulation(algorithm.Algorithm):
         '''
         Constructor.
         '''
-        algorithm.Algorithm.__init__(self)
+        algorithm.Algorithm.__init__(self, 3)
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
         self.n_hidden_layers = n_hidden_layers
         self.n_neurons = n_neurons
-        self.n_genes = self.n_inputs + (self.n_hidden_layers * self.n_neurons) + self.n_outputs
+        self.n_genes = (self.n_inputs
+                        + (self.n_hidden_layers * self.n_neurons
+                           * self.n_inputs)
+                        + self.n_outputs * self.n_neurons)
         _i = self.population_size
         while _i > 0:
             self.population.append(AnnChromosome(self.n_inputs,
                                                  self.n_outputs,
                                                  self.n_hidden_layers,
-                                                 self.n_neurons).randomise_floats(self.n_genes))
+                                                 self.n_neurons).randomise(self.n_genes))
             _i -= 1
         #Original mutation rate
         self.original_mrate = 0
         #Factor to spike mutation
         self.mfactor = 1
 
-    def evolve(self, target):
+    def evolve(self, training_set):
+        '''
+        Train the neural network, by evolving the weights.
+        '''
         #Save generation
         GENERATIONS.append(copy.deepcopy(self))
         #Save original mutation rate
         self.original_mrate = self.mutation_rate
         #Spike the mutation when answers the same
         self.mutation_rate *= self.mfactor
-        algorithm.Algorithm.evolve(self, target)
-        #If we have a useful number of generations
-        if len(GENERATIONS) > 1:
-            #Keep a count of generations in the following loop
-            _i = 0
-            #Look for answer that are the same as this one
-            for gen in reversed(GENERATIONS):
-                if not gen.best_fit == None:
-                    if gen.best_fit.decode() == self.best_fit.decode():
-                        #Ramp up the multiplication factor
-                        self.mfactor *= 32
-                    else:
-                        #As soon as we have a different answer, stop
-                        #If the last best fit is different from the current
-                        if _i == 0:
-                            #Reset the multiplier
-                            self.mfactor = 1
-                        break
-                _i += 1
-        #Reset mutation rate
-        self.mutation_rate = self.original_mrate
+        #Maybe randomise this, so that it is not the sucsession is learned
+        for ts in training_set:
+            target = ts[1]
+            inputs = ts[0]
+            algorithm.Algorithm.evolve(self, inputs, target)
+            #If we have a useful number of generations
+            if len(GENERATIONS) > 1:
+                #Keep a count of generations in the following loop
+                _i = 0
+                #Look for answer that are the same as this one
+                for gen in reversed(GENERATIONS):
+                    if not gen.best_fit == None:
+                        if gen.best_fit.decode() == self.best_fit.decode():
+                            #Ramp up the multiplication factor
+                            self.mfactor *= 32
+                        else:
+                            #As soon as we have a different answer, stop
+                            #If the last best fit is different from the current
+                            if _i == 0:
+                                #Reset the multiplier
+                                self.mfactor = 1
+                            break
+                    _i += 1
+            #Reset mutation rate
+            self.mutation_rate = self.original_mrate
+        self.generation += 1
 
+#def select_brains(brains, result):
+#    '''
+#    Select two brains from a list of brains, based on roulette selection.
+#    
+#    @param brains: A list of brains to chose from.
+#    @type brains: list 
+#    '''
+#    log.logger.debug('Selecting brains.')
+#    min_fitness = 1001
+#    max_fitness = -1001
+#    for brain in brains:
+#        fitness = brain.fitness(result)
+#        if fitness < min_fitness:
+#            min_fitness = fitness
+#        if fitness > max_fitness:
+#            max_fitness = fitness
+#    log.logger.debug("Lowest fitness of all brains: " + str(min_fitness))
+#    log.logger.debug("Highest fitness of all brains: " + str(max_fitness))
+#
+#    def roll():
+#        '''
+#        Select a brain.
+#        '''
+#        target_fitness = random.uniform(min_fitness, max_fitness)
+#        _i = -1
+#        fitness = 0
+#        if target_fitness < 0:
+#            total_fitness = min_fitness
+#            while total_fitness < target_fitness:
+#                _i += 1
+#                fitness = brains[_i].fitness(result)
+#                if fitness < 0:
+#                    total_fitness -= fitness
+#        elif target_fitness > 0:
+#            total_fitness = max_fitness
+#            while total_fitness > target_fitness:
+#                _i += 1
+#                fitness = brains[_i].fitness(result)
+#                if fitness > 0:
+#                    total_fitness -= fitness
+#        return(brains[_i])
+#
+#    ret = list()
+#    ret.append(roll())
+#    ret.append(roll())
+#    for brain in ret:
+#        log.logger.debug('Selected brain has a fitness of: ' + str(brain.fitness(result)))
+#    return(ret)
 
-def select_brains(brains, result):
-    '''
-    Select two brains from a list of brains, based on roulette selection.
-    
-    @param brains: A list of brains to chose from.
-    @type brains: list 
-    '''
-    log.logger.debug('Selecting brains.')
-    min_fitness = 1001
-    max_fitness = -1001
-    for brain in brains:
-        fitness = brain.fitness(result)
-        if fitness < min_fitness:
-            min_fitness = fitness
-        if fitness > max_fitness:
-            max_fitness = fitness
-    log.logger.debug("Lowest fitness of all brains: " + str(min_fitness))
-    log.logger.debug("Highest fitness of all brains: " + str(max_fitness))
-
-    def roll():
-        '''
-        Select a brain.
-        '''
-        target_fitness = random.uniform(min_fitness, max_fitness)
-        _i = -1
-        fitness = 0
-        if target_fitness < 0:
-            total_fitness = min_fitness
-            while total_fitness < target_fitness:
-                _i += 1
-                fitness = brains[_i].fitness(result)
-                if fitness < 0:
-                    total_fitness -= fitness
-        elif target_fitness > 0:
-            total_fitness = max_fitness
-            while total_fitness > target_fitness:
-                _i += 1
-                fitness = brains[_i].fitness(result)
-                if fitness > 0:
-                    total_fitness -= fitness
-        return(brains[_i])
-
-    ret = list()
-    ret.append(roll())
-    ret.append(roll())
-    for brain in ret:
-        log.logger.debug('Selected brain has a fitness of: ' + str(brain.fitness(result)))
-    return(ret)
-
-def mutate(chromosome, mutation_rate):
-    '''
-    Mutate a chromosome.
-    '''
-    for _i in range(len(chromosome) - 1):
-        if random.uniform(0, 1) < mutation_rate:
-            chromosome[_i] += random.uniform(-1, 1)
-    return(chromosome)
+#def mutate(chromosome, mutation_rate):
+#    '''
+#    Mutate a chromosome.
+#    '''
+#    for _i in range(len(chromosome) - 1):
+#        if random.uniform(0, 1) < mutation_rate:
+#            chromosome[_i] += random.uniform(-1, 1)
+#    return(chromosome)
 
 def child(pair, crossover_rate, mut_rate):
     '''
@@ -244,18 +256,36 @@ def train(brains, training_set, cross_rate, mut_rate):
         generation += 1
 
 
+#def main():
+#    '''Main entry point.'''
+#    log.init_file_log(logging.INFO)
+#    log.init_console_log()
+#
+#    log.logger.info("ANNbug V" + str(VERSION))
+#
+#    brains = list()
+#    log.logger.info("Creating initial brains...")
+#    for i in range(100):
+#        log.logger.debug("Creating initial brain number: " + str(i))
+#        brains.append(genetic.Genetic(2, 1, 1, 4))
+#
+#    training_set = list()
+#    training_set.append([[0, 0], [0]])
+#    training_set.append([[1, 0], [1]])
+#    training_set.append([[0, 1], [1]])
+#    training_set.append([[1, 1], [0]])
+#
+#    train(brains, training_set, 0.75, 0.005)
+
+
 def main():
-    '''Main entry point.'''
-    log.init_file_log(logging.INFO)
+    '''
+    Genetic test program.
+    '''
+    log.init_file_log(logging.DEBUG)
     log.init_console_log()
 
-    log.logger.info("ANNbug V" + str(VERSION))
-
-    brains = list()
-    log.logger.info("Creating initial brains...")
-    for i in range(100):
-        log.logger.debug("Creating initial brain number: " + str(i))
-        brains.append(genetic.Genetic(2, 1, 1, 4))
+    log.logger.info("ANNbug V." + str(VERSION))
 
     training_set = list()
     training_set.append([[0, 0], [0]])
@@ -263,7 +293,16 @@ def main():
     training_set.append([[0, 1], [1]])
     training_set.append([[1, 1], [0]])
 
-    train(brains, training_set, 0.75, 0.005)
+    #Create initial population
+    population = AnnPopulation(2, 1, 1, 4)
+    population.mutation_rate = 0.001
+    #Loop until an answer is found
+    while not population.found:
+        population.evolve(training_set)
+        print('Generation: ' + str(population.generation) + '\n' + str(population.best_fit.decode()))
+    print('Answer(s):')
+    for answer in population.answers:
+        print('    ' + str(answer.decode()))
 
 
 if __name__ == '__main__':

@@ -58,7 +58,7 @@ class Net(object):
             net_layer.inputs = last_output
             net_layer.update()
             last_output = net_layer.outputs
-            
+
         self.output = last_output
         log.logger.debug('Output: ' + str(self.output))
 
@@ -71,7 +71,7 @@ class Net(object):
         for n_layer in self.layers:
             ret += len(n_layer.neurons)
         return(ret)
-    
+
     def set_weights(self, weights):
         '''
         Set all the weights in the network from an array.
@@ -85,7 +85,7 @@ class Net(object):
                 for _j in range(len(n_neuron.weights)):
                     n_neuron.weights[_j] = weights[i]
                     i += 1
-                    
+
     def get_weights(self):
         '''
         Return an array of all the weights in the network.
@@ -96,3 +96,25 @@ class Net(object):
                 for weight in n_neuron.weights:
                     ret.append(weight)
         return(ret)
+
+    def __str__(self):
+        '''
+        Convert to string.
+        '''
+        n_layer = 0
+        n_neuron = 0
+        n_weight = 0
+        ret = ''
+        for _layer in self.layers:
+            n_layer += 1
+            for _neuron in _layer.neurons:
+                n_neuron += 1
+                for weight in _neuron.weights:
+                    n_weight += 1
+                    ret += ('l: ' + str(n_layer)
+                            + ' n: ' + str(n_neuron)
+                            + ' w: ' + str(n_weight)
+                            + ' = ' + str(weight)
+                            + '\n')
+        return(ret)
+
