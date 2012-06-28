@@ -71,7 +71,10 @@ class Algorithm(object):
         best_fit_neg = -9999
         best_fit_pos = 9999
         #Run through the population
+        _n = 0
         for entity in self.population:
+            _n += 1
+            log.logger.info('Brain: ' + str(_n))
             #Save the best chromosome
             fitness = entity.fitness(inputs, target)
             if fitness < 0:
@@ -94,10 +97,12 @@ class Algorithm(object):
                 self.answers.append(entity)
                 log.logger.debug('Solution found: ' + entity.net.id)
         #If no answer is found, create a new generation
+        _n = 0
         if not self.found:
             new_pop = list()
             while len(new_pop) < len(self.population):
-                log.logger.debug('Creating a child')
+                _n += 1
+                log.logger.info('Child: ' + str(_n))
                 #Find a parent
                 first_parent = self.roulette(inputs, target)
                 #Cross with a second
