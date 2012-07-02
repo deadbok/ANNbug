@@ -8,7 +8,7 @@ from ann import net
 import logging
 import log
 import copy
-import profile
+import cProfile
 
 #Jan 21, 2012 version 0.1
 #    Getting the basics straight.
@@ -31,7 +31,6 @@ class AnnChromosome(floatchromo.FloatChromo):
         self.n_hidden_layers = n_hidden_layers
         self.n_neurons = n_neurons
         self.net = None
-        self.last_fit = None
 
     def decode(self):
         '''
@@ -53,19 +52,20 @@ class AnnChromosome(floatchromo.FloatChromo):
         else:
             return(True)
 
-    def fitness(self, inputs, target):
+    def fitness(self, training_set):
         '''
         Get the fitness of the chromosome.
         '''
         self.decode()
-        self.net.update(inputs)
-        #Both output and answer are equal, max fitness!
-        if target == self.net.output:
-            return(0)
-        ret = 0
-        for _i, o_val in enumerate(self.net.output):
-            ret += target[_i] - o_val
-        ret = ret / len(target)
+        for ts in training_set:
+            self.net.update(ts[0])
+            ret = 0
+            #Both output and answer are equal, max fitness!
+            if not ts[1] == self.net.output:
+                for _i, o_val in enumerate(self.net.output):
+                    ret += ts[1][_i] - o_val
+                ret /= len(ts[1])
+        ret /= len(training_set)
         log.logger.debug("Fitness: " + str(ret))
         self.last_fit = ret
         return(ret)
@@ -78,7 +78,7 @@ class AnnPopulation(algorithm.Algorithm):
         '''
         Constructor.
         '''
-        algorithm.Algorithm.__init__(self, 5)
+        algorithm.Algorithm.__init__(self, 50)
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
         self.n_hidden_layers = n_hidden_layers
@@ -109,34 +109,27 @@ class AnnPopulation(algorithm.Algorithm):
         self.original_mrate = self.mutation_rate
         #Spike the mutation when answers the same
         self.mutation_rate *= self.mfactor
-        #Maybe randomise this, so that it is not the sucsession is learned
-        _n = 0
-        for ts in training_set:
-            _n += 1
-            log.logger.info('Traning set: ' + str(_n))
-            target = ts[1]
-            inputs = ts[0]
-            algorithm.Algorithm.evolve(self, inputs, target)
-            #If we have a useful number of generations
-            if len(GENERATIONS) > 1:
-                #Keep a count of generations in the following loop
-                _i = 0
-                #Look for answer that are the same as this one
-                for gen in reversed(GENERATIONS):
-                    if not gen.best_fit == None:
-                        if gen.best_fit.decode() == self.best_fit.decode():
-                            #Ramp up the multiplication factor
-                            self.mfactor *= 32
-                        else:
-                            #As soon as we have a different answer, stop
-                            #If the last best fit is different from the current
-                            if _i == 0:
-                                #Reset the multiplier
-                                self.mfactor = 1
-                            break
-                    _i += 1
-            #Reset mutation rate
-            self.mutation_rate = self.original_mrate
+        algorithm.Algorithm.evolve(self, training_set)
+        #If we have a useful number of generations
+        if len(GENERATIONS) > 1:
+            #Keep a count of generations in the following loop
+            _i = 0
+            #Look for answer that are the same as this one
+            for gen in reversed(GENERATIONS):
+                if not gen.best_fit == None:
+                    if gen.best_fit.decode() == self.best_fit.decode():
+                        #Ramp up the multiplication factor
+                        self.mfactor *= 32
+                    else:
+                        #As soon as we have a different answer, stop
+                        #If the last best fit is different from the current
+                        if _i == 0:
+                            #Reset the multiplier
+                            self.mfactor = 1
+                        break
+                _i += 1
+        #Reset mutation rate
+        self.mutation_rate = self.original_mrate
         self.generation += 1
 
 
@@ -144,7 +137,7 @@ def main():
     '''
     Genetic test program.
     '''
-    log.init_file_log(logging.DEBUG)
+    log.init_file_log(logging.INFO)
     log.init_console_log()
 
     log.logger.info("ANNbug V." + str(VERSION))
@@ -159,16 +152,14 @@ def main():
     population = AnnPopulation(2, 1, 1, 4)
     population.mutation_rate = 0.001
     #Loop until an answer is found
-    while not population.generation > 5:
+    while not population.generation > 10:
         population.evolve(training_set)
         log.logger.info('Generation: ' + str(population.generation)
-                        + ' fitness: ' + str(population.best_fit.last_fit)
-                        + '\n' + str(population.best_fit.decode()))
+                        + ' fitness: ' + str(population.best_fit.last_fit))
     print('Answer(s):')
     for answer in population.answers:
         print('    ' + str(answer.decode()))
 
-profile.run('main()')
-
 if __name__ == '__main__':
-    main()
+#    main()
+    cProfile.run('main()', 'profile.stat')

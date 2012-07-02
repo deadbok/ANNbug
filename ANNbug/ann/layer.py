@@ -36,7 +36,6 @@ class Layer(object):
         self.outputs = list()
         for n in self.neurons:
             n.inputs = self.inputs
-            n.update()
             self.outputs.append(n.output)
 
 class InputLayer(object):
@@ -66,5 +65,4 @@ class InputLayer(object):
         self.outputs = list()
         for _i, n in enumerate(self.neurons):
             n.inputs = [self.inputs[_i]]
-            n.update()
             self.outputs.append(n.output)

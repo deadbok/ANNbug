@@ -26,7 +26,6 @@ class Algorithm(object):
         self.population_size = population_size
         self.chromosome_bits = chromosome_bits
         self.population = list()
-        self.generations = list()
         #Default crossover rate
         self.crossover_rate = 0.75
         #Default mutation rate
@@ -40,7 +39,7 @@ class Algorithm(object):
         #Or best fit
         self.best_fit = None
 
-    def roulette(self, inputs, target):
+    def roulette(self, training_set):
         '''
         Select an entity "randomly" favouring best fit.
         '''
@@ -48,20 +47,20 @@ class Algorithm(object):
         #Find total fitness
         total_fitness = 0
         for entity in self.population:
-            total_fitness += abs(entity.fitness(inputs, target))
+            total_fitness += abs(entity.fitness(training_set))
         fitness = 0
         #Find a random fitness to aim for
         target_fitness = random.uniform(0, total_fitness)
         #Keep adding the fitness of each entity until the target fitness is reached
         for entity in self.population:
-            fitness += abs(entity.fitness(inputs, target))
+            fitness += abs(entity.last_fit)
             if fitness >= target_fitness:
                 log.logger.debug("Selected chromosome:" + str(entity.data))
                 return(entity)
         #As a last resort, return the last entity
         return(entity)
 
-    def evolve(self, inputs, target):
+    def evolve(self, training_set):
         '''
         Override this method with code to evolve one generation.
         '''
@@ -76,7 +75,7 @@ class Algorithm(object):
             _n += 1
             log.logger.info('Brain: ' + str(_n))
             #Save the best chromosome
-            fitness = entity.fitness(inputs, target)
+            fitness = entity.fitness(training_set)
             if fitness < 0:
                 #Negative best fit
                 if best_fit_neg < fitness:
@@ -89,7 +88,7 @@ class Algorithm(object):
             if self.best_fit == None:
                 self.best_fit = entity
             else:
-                if abs(self.best_fit.fitness(inputs, target)) > fitness:
+                if abs(self.best_fit.fitness(training_set)) > fitness:
                     self.best_fit = entity
             #Check for solution
             if fitness == 0:
@@ -104,9 +103,9 @@ class Algorithm(object):
                 _n += 1
                 log.logger.info('Child: ' + str(_n))
                 #Find a parent
-                first_parent = self.roulette(inputs, target)
+                first_parent = self.roulette(training_set)
                 #Cross with a second
-                child = first_parent.cross(self.roulette(inputs, target), self.crossover_rate)
+                child = first_parent.cross(self.roulette(training_set), self.crossover_rate)
                 #Mutate
                 child.mutate(self.mutation_rate)
                 #If fitness is 0 it is not worth the trouble evolving it

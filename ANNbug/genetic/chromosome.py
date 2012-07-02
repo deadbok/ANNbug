@@ -16,6 +16,7 @@ class Chromosome(object):
         '''
         log.logger.debug("Creating a chromosome.")
         self.data = None
+        self.last_fit = None
 
     def randomise(self, length):
         '''
@@ -47,7 +48,7 @@ class Chromosome(object):
         @param target: The target value.
         @type target: int
         '''
-        pass
+        return(None)
 
     def cross(self, other, rate):
         '''
@@ -58,7 +59,7 @@ class Chromosome(object):
         @param rate: The crossover rate (0..1)
         @type rate: float    
         '''
-        return(None)
+        return(self)
 
     def mutate(self, rate):
         '''
@@ -67,4 +68,4 @@ class Chromosome(object):
         @param rate: The mutation rate (0..1)
         @type rate: float            
         '''
-        return(None)
+        return(self)
